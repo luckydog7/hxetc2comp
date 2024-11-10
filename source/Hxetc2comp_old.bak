@@ -1,0 +1,282 @@
+package;
+
+import cpp.NativeArray;
+import cpp.RawPointer;
+import cpp.UInt32;
+import cpp.UInt8;
+import flixel.FlxG;
+import haxe.ds.Vector;
+import haxe.io.Bytes;
+import haxe.io.UInt8Array;
+import lime.graphics.Image;
+import lime.system.CFFI;
+import lime.system.JNI;
+import lime.system.System;
+import lime.utils.ArrayBufferView;
+import openfl.desktop.Clipboard;
+import openfl.display.BitmapData;
+import openfl.display3D.Context3D;
+import openfl.display3D.Context3DTextureFormat;
+import openfl.display3D._internal.ATFGPUFormat;
+import openfl.display3D.textures.Texture;
+import openfl.display3D.textures.TextureBase;
+import sys.io.File;
+import sys.thread.Thread;
+
+// TODO: Need to reorganize and rewrite that shi
+
+class EtcTexture extends TextureBase {
+	@:noCompletion private function new(context:Context3D, width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool,
+			streamingLevels:Int, srcData:Array<cpp.UInt8>) {
+		super(context);
+
+		__width = width;
+		__height = height;
+		// __format = format;
+		__optimizeForRenderToTexture = optimizeForRenderToTexture;
+		__streamingLevels = streamingLevels;
+
+		@:privateAccess
+		var gl = __context.gl;
+
+		// FlxG.stage.
+
+		// and why etc2 extension doesnt exist
+		// // wtf there is no etc2 in parent class
+		// // var etc2AlphaExtension = gl.getExtension("OES_compressed_ETC1_RGB8_texture");
+		// #if (js && html5)
+		// var etc2Extension = gl.getExtension("WEBGL_compressed_texture_etc");
+		// #else
+		// var etc2Extension = gl.getExtension("OES_compressed_ETC2_sRGB8_alpha8_texture");
+		// #end
+
+		// // if (etc2Extension != null)
+		// // {
+		TextureBase.__compressedFormatsAlpha[ATFGPUFormat.ETC2] = 0x9278; // etc2Extension.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+		// 	// trace(etc2Extension.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC);
+		// // }
+		// // Clipboard.generalClipboard.setData(TEXT_FORMAT, gl.getParameter(0x1F02));
+
+		// @:privateAccess
+		// lime._internal.backend.native.NativeOpenGLRenderContext.__supportedExtensions = null;
+		// trace(gl.getSupportedExtensions());
+
+		// @:privateAccess
+		// {
+		// 	gl.getIntegerv();
+		// }
+
+		// Clipboard.generalClipboard.setData(TEXT_FORMAT, gl.getSupportedExtensions());
+
+		__textureTarget = gl.TEXTURE_2D;
+
+		@:privateAccess
+		__context.__bindGLTexture2D(__textureID);
+
+		// gl.texImage2D(__textureTarget, 0, __internalFormat, __width, __height, 0, __format, gl.UNSIGNED_BYTE, null);
+		var context = __context;
+		@:privateAccess
+		var gl = context.gl;
+		var level = 0;
+		var alpha = true;
+
+		@:privateAccess
+		__context.__bindGLTexture2D(__textureID);
+
+		var gpuFormat:ATFGPUFormat = ATFGPUFormat.ETC2;
+
+		var format = alpha ? TextureBase.__compressedFormatsAlpha[gpuFormat] : TextureBase.__compressedFormats[gpuFormat];
+		if (format == 0) {
+			trace("ETC2 is not supported on this device");
+			return;
+		}
+
+		__format = format;
+		__internalFormat = format;
+
+		// @:privateAccess
+		// var inData = new ArrayBufferView(cast srcData, 4);
+		// trace(__internalFormat);
+		@:privateAccess
+		gl.compressedTexImage2D(__textureTarget, level, __internalFormat, width, height, 0,
+			lime.utils.UInt8Array.fromBytes(new Bytes(srcData.length, srcData)));
+
+		// UInt8Array.fromBytes(new Bytes(srcData.length, srcData)
+		var error = 'GL Error: ${gl.getError()}';
+
+		trace(error);
+		// Clipboard.generalClipboard.setData(TEXT_FORMAT, error);
+
+		@:privateAccess
+		__context.__bindGLTexture2D(null);
+
+		if (optimizeForRenderToTexture)
+			__getGLFramebuffer(true, 0, 0);
+	}
+	// public function uploadCompressedTextureFromRawBytes(arr:Array<UInt>)
+	// {
+	// var context = __context;
+	// var gl = context.gl;
+	// __context.__bindGLTexture2D(__textureID);
+	// var gpuFormat:ATFGPUFormat = ATFGPUFormat.ETC2;
+	// var format = alpha ? TextureBase.__compressedFormatsAlpha[gpuFormat] : TextureBase.__compressedFormats[gpuFormat];
+	// if (format == 0) return;
+	// }
+}
+
+// @:buildXml('<include name="${haxelib:hxetc2comp}/project/Build.xml" />')
+// @:unreflective
+class Hxetc2comp {
+	// inline public static var ETCCOMP_MIN_EFFORT_LEVEL:Float = 0.0;
+	// inline public static var ETCCOMP_DEFAULT_EFFORT_LEVEL:Float = 40.0;
+	// inline public static var ETCCOMP_MAX_EFFORT_LEVEL:Float = 100.0;
+	// untested
+	public static function nativeArrayToHaxe(ptr:cpp.Star<cpp.UInt8>, size:UInt):Array<UInt8> {
+		// NativeArray.setUnmanagedData()
+		return untyped __cpp__("::Array_obj<unsigned char>::fromData({0}, {1})", ptr, size);
+	}
+
+	public static function toCompressed(image:Image, filename:String = ""):BitmapData {
+		trace("starting compression: " + filename);
+		// image.buffer.data.buffer.getData()
+		// EtcImage.name();
+		// untyped __cpp__("Etc::Image(3,nullptr,128,128,nullptr);");
+		// trace(image.format);
+		// var floatRgb:Array<cpp.Float32> = [];
+
+		// for (val in image.buffer.data)
+		// {
+		// 	floatRgb.push(val / 255);
+		// }
+
+		// skipping small images
+		if (Math.max(image.width, image.height) <= 2047) {
+			var b = BitmapData.fromImage(image);
+			b.disposeImage(); // hehe
+			return b;
+		}
+
+		// var floatRgb:Array<cpp.Float32> = new Array<cpp.Float32>(image.buffer.data.length);
+		var floatRgb:Array<cpp.Float32> = NativeArray.create(image.buffer.data.length);
+
+		// var dd = new Vector<cpp.Float32>(5);
+
+		for (i in 0...image.buffer.data.length) {
+			floatRgb[i] = image.buffer.data[i] / 255;
+		}
+
+		// cpp.Pointer.arrayElem(image.buffer.data, image.buffer.data.length);
+		var im = EtcImage.Image(cast cpp.Pointer.arrayElem(floatRgb, 0).raw, image.width, image.height, EtcErrorMetric.RGBA);
+		// trace(RawPointer.addressOf(im));
+
+		// return;
+		// trace(im.GetEncodingBitsBytes());
+		im.Encode(EtcImageFormat.RGBA8, EtcErrorMetric.RGBA, 0, 10, 1024);
+
+		floatRgb = null;
+		cpp.vm.Gc.run(true);
+
+		var natarr = im.GetEncodingBits();
+		// natarr.ptr
+		// var arrin = cpp.NativeArray.setSize(natarr, im.GetEncodingBitsBytes());
+
+		var arr = nativeArrayToHaxe(natarr.ptr, im.GetEncodingBitsBytes());
+
+		trace("hello");
+		trace('arr: ${arr.length}');
+
+		im.DisposeImage();
+
+		@:privateAccess
+		var tex = new EtcTexture(FlxG.stage.context3D, image.width, image.height, Context3DTextureFormat.COMPRESSED_ALPHA, true, 0, cast arr);
+		// untyped __cpp__("::Array<unsigned char> ar = ::Array_obj<unsigned char>::fromData(natarr.ptr, im.GetEncodingBitsBytes())");
+
+		cpp.vm.Gc.run(true);
+
+		return BitmapData.fromTexture(tex);
+		// for (el in arr)
+		// {
+		// 	trace(el);
+		// }
+		// for (i in 0...im.GetEncodingBitsBytes())
+		// {
+		// 	var val = natarr[i];
+		// 	if (val < 0)
+		// 	{
+		// 		trace("sadas" + i);
+		// 		break;
+		// 	}
+		// }
+	}
+}
+
+// @:buildXml('<include name="${haxelib:hxetc2comp}/project/Build.xml" />')
+// @:include("Etc.h")
+// @:structAccess
+// extern class Etc2Comp_native
+// {
+// }
+
+extern enum abstract EtcImageFormat(EtcImageFormat_Impl) {
+	@:native("Etc::Image::Format::UNKNOWN")
+	var UNKNOWN;
+
+	@:native("Etc::Image::Format::ETC1")
+	var ETC1;
+
+	@:native("Etc::Image::Format::RGB8")
+	var RGB8;
+	@:native("Etc::Image::Format::SRGB8")
+	var SRGB8;
+	@:native("Etc::Image::Format::RGBA8")
+	var RGBA8;
+	@:native("Etc::Image::Format::SRGBA8")
+	var SRGBA8;
+	@:native("Etc::Image::Format::R11")
+	var R11;
+	@:native("Etc::Image::Format::SIGNED_R11")
+	var SIGNED_R11;
+	@:native("Etc::Image::Format::RG11")
+	var RG11;
+	@:native("Etc::Image::Format::SIGNED_RG11")
+	var SIGNED_RG11;
+	@:native("Etc::Image::Format::RGB8A1")
+	var RGB8A1;
+	@:native("Etc::Image::Format::SRGB8A1")
+	var SRGB8A1;
+
+	@:native("Etc::Image::Format::FORMATS")
+	var FORMATS;
+
+	@:native("Etc::Image::Format::DEFAULT")
+	var DEFAULT;
+}
+
+extern enum abstract EtcErrorMetric(EtcErrorMetric_Impl) {
+	@:native("Etc::ErrorMetric::RGBA")
+	var RGBA;
+	@:native("Etc::ErrorMetric::RGBX")
+	var RGBX;
+	@:native("Etc::ErrorMetric::REC709")
+	var REC709;
+	@:native("Etc::ErrorMetric::NUMERIC")
+	var NUMERIC;
+	@:native("Etc::ErrorMetric::NORMALXYZ")
+	var NORMALXYZ;
+	//
+	@:native("Etc::ErrorMetric::ERROR_METRICS")
+	var ERROR_METRICS;
+	//
+	@:native("Etc::ErrorMetric::BT709")
+	var BT709;
+}
+
+@:unreflective
+@:native("Etc::ErrorMetric")
+@:include("Etc.h")
+extern class EtcErrorMetric_Impl {}
+
+@:unreflective
+@:native("Etc::Image::Format")
+@:include("Etc.h")
+private extern class EtcImageFormat_Impl {}

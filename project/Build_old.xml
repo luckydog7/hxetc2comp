@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xml>
+	<pragma once="true" />
+
+	<set name="ETCLIB_PROJECT_PATH" value="${haxelib:hxetc2comp}/project" />
+	<set name="ETCLIB_LIB_PATH" value="${haxelib:hxetc2comp}/project/etc2comp" />
+
+	<files id="hxetc" >
+
+        <cache value="1"/>
+
+
+		<!-- <compile src="${ETCLIB_LIB_PATH}/EtcLib/Etc" include="**/*.cpp" /> -->
+		<!-- <compile src="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec" include="**/*.cpp" /> -->
+
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/Etc/EtcImage.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/Etc/Etc.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/Etc/EtcFilter.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/Etc/EtcMath.cpp" />
+
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding_ETC1.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding_R11.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding_RG11.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding_RGB8.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding_RGB8A1.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding_RGBA8.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4Encoding.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcDifferentialTrys.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcIndividualTrys.cpp" />
+		<file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcSortedBlockList.cpp" />
+
+		<compilerflag value="-I${ETCLIB_LIB_PATH}/EtcLib/Etc" />
+		<compilerflag value="-I${ETCLIB_LIB_PATH}/EtcLib/EtcCodec" />
+
+
+		
+		<!-- <file name="${ETCLIB_LIB_PATH}/EtcLib/EtcCodec/EtcBlock4x4EncodingBits.h" /> -->
+
+
+    </files>
+
+
+	<target id="haxe">
+		<files id="hxetc" />
+		<!-- <section if="linux">
+			<lib name="-lpthread" />
+			<lib name="-lm" />
+		</section> -->
+	</target>
+	
+	
+</xml>
