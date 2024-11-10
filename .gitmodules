@@ -1,0 +1,3 @@
+[submodule "project/etc2comp"]
+	path = project/etc2comp
+	url = https://github.com/google/etc2comp.git
