@@ -6,8 +6,7 @@ import openfl.display3D.Context3DTextureFormat;
 import openfl.display3D._internal.ATFGPUFormat;
 import haxe.io.Bytes;
 
-class EtcTexture extends TextureBase 
-{
+class EtcTexture extends TextureBase {
 	@:noCompletion private function new(context:Context3D, width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool,
 			streamingLevels:Int, srcData:Array<cpp.UInt8>) {
 		super(context);

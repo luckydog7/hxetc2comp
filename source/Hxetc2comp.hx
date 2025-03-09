@@ -27,21 +27,21 @@ import openfl.display3D.textures.TextureBase;
 import sys.io.File;
 import sys.thread.Thread;
 
-
 // TODO: Need to reorganize and rewrite that shi
-
 // @:buildXml('<include name="${haxelib:hxetc2comp}/project/Build.xml" />')
 // @:unreflective
 class Hxetc2comp {
 	// inline public static var ETCCOMP_MIN_EFFORT_LEVEL:Float = 0.0;
 	// inline public static var ETCCOMP_DEFAULT_EFFORT_LEVEL:Float = 40.0;
 	// inline public static var ETCCOMP_MAX_EFFORT_LEVEL:Float = 100.0;
-	
 	// untested
-	public static function nativeArrayToHaxe(ptr:cpp.Star<cpp.UInt8>, size:UInt):Array<UInt8> 
-	{
-		// NativeArray.setUnmanagedData()
+	public static function nativeArrayToHaxe(ptr:cpp.Star<cpp.UInt8>, size:UInt):Array<UInt8> {
+		// NativeArray.setUnmanagedData();
 		return untyped __cpp__("::Array_obj<unsigned char>::fromData({0}, {1})", ptr, size);
+	}
+
+	inline public static function freeArray(arr:cpp.Pointer<cpp.UInt8>) {
+		untyped __cpp__("delete[] {0}", arr);
 	}
 
 	public static function toCompressed(image:Image, filename:String = ""):BitmapData {
@@ -89,6 +89,8 @@ class Hxetc2comp {
 		// var arrin = cpp.NativeArray.setSize(natarr, im.GetEncodingBitsBytes());
 
 		var arr = nativeArrayToHaxe(natarr.ptr, im.GetEncodingBitsBytes());
+
+		freeArray(natarr);
 
 		trace("hello");
 		trace('arr: ${arr.length}');
